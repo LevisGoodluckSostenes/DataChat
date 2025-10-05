@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% block title %}Story{% endblock %}
+{% block content %}
+  <div class="card">
+    <div class="card-body">
+      <div class="d-flex align-items-center mb-2">
+        {% if story.author.profile.avatar %}
+          <img src="{{ story.author.profile.avatar.url }}" class="rounded-circle me-2" width="40" height="40" alt="avatar">
+        {% else %}
+          <div class="rounded-circle bg-secondary me-2" style="width:40px;height:40px;"></div>
+        {% endif %}
+        <div>
+          <h3 class="mb-0">{{ story.title }}</h3>
+          <p class="text-muted mb-0">by {{ story.author.username }} • {{ story.created_at|date:'M d, Y H:i' }}{% if story.category %} • {{ story.category.name }}{% endif %}</p>
+        </div>
+      </div>
+      <p>{{ story.description }}</p>
+      <div class="mb-3">
+        <a href="{{ story.file.url }}" target="_blank" class="btn btn-outline-primary btn-sm">View Attachment</a>
+      </div>
+      <div class="d-flex align-items-center gap-2 mb-3">
+        {% if user.is_authenticated %}
+          <a href="{% url 'toggle_like' story.pk %}">
+            {% if liked %}Unlike{% else %}Like{% endif %}
+          </a>
+        {% else %}
+          <a href="{% url 'login' %}">Like</a>
+        {% endif %}
+        <span>{{ story.likes.count }}</span>
+      </div>
+
+      <h5>Comments</h5>
+      {% if user.is_authenticated %}
+        <form method="post" action="{% url 'add_comment' story.pk %}" class="mb-3">
+          {% csrf_token %}
+          <div class="input-group">
+            <input type="text" class="form-control" name="text" placeholder="Add a comment..." required>
+            <button class="btn btn-primary">Post</button>
+          </div>
+        </form>
+      {% else %}
+        <p><a href="{% url 'login' %}">You must log in to continue.</a></p>
+      {% endif %}
+      <ul class="list-group">
+        {% for c in comments %}
+          <li class="list-group-item">
+            <div class="d-flex justify-content-between">
+              <div class="d-flex align-items-center">
+                {% if c.user.profile.avatar %}
+                  <img src="{{ c.user.profile.avatar.url }}" class="rounded-circle me-2" width="28" height="28" alt="avatar">
+                {% else %}
+                  <div class="rounded-circle bg-secondary me-2" style="width:28px;height:28px;"></div>
+                {% endif %}
+                <div>
+                  <strong>{{ c.user.username }}</strong>
+                  <span class="text-muted">• {{ c.created_at|date:'M d, Y H:i' }}</span>
+                </div>
+              </div>
+              {% if user.is_authenticated and c.user_id == user.id %}
+                <div class="d-flex gap-2">
+                  <a href="{% url 'edit_comment' c.id %}">Edit</a>
+                  <a href="{% url 'delete_comment' c.id %}" data-confirm-delete>Delete</a>
+                </div>
+              {% endif %}
+            </div>
+            <div class="mt-1">{{ c.text }}</div>
+            <div class="mt-2">
+              {% with rc=c.replies.count %}
+                <small class="text-muted">
+                  {% if rc == 0 %}0 reply{% elif rc == 1 %}1 reply{% else %}{{ rc }} replies{% endif %}
+                </small>
+              {% endwith %}
+              {% if user.is_authenticated %}
+                <a class="ms-2" href="{% url 'add_reply' c.id %}">Reply</a>
+              {% else %}
+                <a class="ms-2" href="{% url 'login' %}">Reply</a>
+              {% endif %}
+            </div>
+            {% if c.replies.all %}
+              <ul class="list-group list-group-flush mt-2">
+                {% for r in c.replies.all %}
+                  <li class="list-group-item">
+                    <div class="d-flex justify-content-between">
+                      <div class="d-flex align-items-center">
+                        {% if r.user.profile.avatar %}
+                          <img src="{{ r.user.profile.avatar.url }}" class="rounded-circle me-2" width="24" height="24" alt="avatar">
+                        {% else %}
+                          <div class="rounded-circle bg-secondary me-2" style="width:24px;height:24px;"></div>
+                        {% endif %}
+                        <div>
+                          <strong>{{ r.user.username }}</strong>
+                          <span class="text-muted">• {{ r.created_at|date:'M d, Y H:i' }}</span>
+                        </div>
+                      </div>
+                      {% if user.is_authenticated and r.user_id == user.id %}
+                        <div class="d-flex gap-2">
+                          <a href="{% url 'edit_reply' r.id %}">Edit</a>
+                          <a href="{% url 'delete_reply' r.id %}" data-confirm-delete>Delete</a>
+                        </div>
+                      {% endif %}
+                    </div>
+                    <div class="mt-1">{{ r.text }}</div>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          </li>
+        {% empty %}
+          <li class="list-group-item">No comments yet.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <script></script>
+{% endblock %}
+
+

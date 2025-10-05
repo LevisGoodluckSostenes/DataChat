@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+  <div class="d-flex align-items-center gap-3 mb-3">
+    {% if profile.avatar %}
+      <img src="{{ profile.avatar.url }}" alt="avatar" class="rounded-circle" width="64" height="64">
+    {% else %}
+      <div class="rounded-circle bg-secondary" style="width:64px;height:64px;"></div>
+    {% endif %}
+    <div>
+      <h4 class="mb-0">{{ profile_user.username }}</h4>
+      <small class="text-muted">{{ profile_user.email }}</small>
+    </div>
+  </div>
+  <p>{{ profile.bio }}</p>
+  <hr>
+  <div class="d-flex gap-4 mb-3">
+    <div><strong>{{ stories_count }}</strong> Stories</div>
+    <div><strong>{{ followers_count }}</strong> Followers</div>
+    <div><strong>{{ following_count }}</strong> Following</div>
+  </div>
+  <div class="mb-3">
+    {% if request.user == profile_user %}
+      <a href="{% url 'edit_profile' %}" class="btn btn-sm btn-outline-primary">Edit Profile</a>
+    {% else %}
+      <a href="{% url 'follow_toggle' profile_user.username %}" class="btn btn-sm {% if is_following %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
+        {% if is_following %}Unfollow{% else %}Follow{% endif %}
+      </a>
+    {% endif %}
+  </div>
+  <h5>Stories</h5>
+  {% for story in profile_user.stories.all %}
+    <div><a href="{% url 'story_detail' story.pk %}">{{ story.title }}</a></div>
+  {% empty %}
+    <p>No stories yet.</p>
+  {% endfor %}
+{% endblock %}
+
+
